@@ -84,40 +84,43 @@ const displayMovements = function (movements) {
     containerMovements.insertAdjacentHTML('afterbegin', html);
   });
 };
-displayMovements(account1.movements);
 
-const createUsername = function (accs) {
-  accs.forEach(function (accs) {
-    accs.Username = accs.owner
-      .toLowerCase('')
-      .split('')
+const calcDisplayBalance = function (movements) {
+  const Balance = movements.reduce((acc, mov) => acc + mov, 0);
+  labelBalance.textContent = `${Balance}€`;
+};
+
+const createUsernames = function (accs) {
+  accs.forEach(function (acc) {
+    acc.username = acc.owner
+      .toLowerCase()
+      .split(' ')
       .map(name => name[0])
       .join('');
   });
 };
-createUsername(accounts);
+createUsernames(accounts);
 
-const calcDisplaySummary = function (movements) {
-  const income = movements
+const calcDisplaySummary = function (acc) {
+  const income = acc.movements
     .filter(mov => mov > 0)
     .reduce((acc, mov) => acc + mov, 0);
   labelSumIn.textContent = `${income}€`;
 
-  const out = movements
+  const out = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, mov) => acc + mov, 0);
   labelSumOut.textContent = `${Math.abs(out)}€`;
 
-  const interest = movements
+  const interest = acc.movements
     .filter(mov => mov > 0)
-    .map(deposit => (deposit * 1.2) / 100)
+    .map(deposit => (deposit * acc.interestRate) / 100)
     .filter((int, i, arr) => {
       return int >= 1;
     })
     .reduce((acc, int) => acc + int, 0);
   labelSumInterest.textContent = `${Math.abs(interest)}€`;
 };
-calcDisplaySummary(account1.movements);
 
 // event handler
 let currentAccount;
@@ -126,13 +129,31 @@ btnLogin.addEventListener('click', function (e) {
   // prevent form from submitting
   e.preventDefault();
 
-  currentAccount = accounts.find(acc => acc.username === inputLoginPin.value);
-  console.log(currentAccount);
+  currentAccount = accounts.find(
+    acc => acc.username === inputLoginUsername.value
+  );
+
   if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    // Display UI and message
+    labelWelcome.textContent = `Welcome back, ${
+      currentAccount.owner.split(' ')[0]
+    }`;
+    containerApp.style.opacity = 100;
+
+    // Clear input fields
+
+    inputLoginUsername.value = inputLoginPin.value = '';
+    inputLoginPin.blur();
+
+    // Display Movements
+    displayMovements(currentAccount.movements);
+    // Display Balance
+    calcDisplayBalance(currentAccount.movements);
+    //Display Summary
+    calcDisplaySummary(currentAccount);
   }
-  // Display UI massege
-  labelWelcome.textContent = `welcome back ${
-    currentAccount.owner.split(' ')[0]
-  }`;
-  containerApp.style.opacity = 100;
+});
+
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
 });
